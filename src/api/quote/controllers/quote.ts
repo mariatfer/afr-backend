@@ -100,8 +100,9 @@ export default {
       .filter((file) => file.filepath)
       .map((file) => ({
         filename: file.originalFilename,
-        content: fs.readFileSync(file.filepath).toString("base64"),
-        content_type: file.mimetype,
+        content: fs.readFileSync(file.filepath, { encoding: "base64" }),
+        encoding: "base64",
+        contentType: file.mimetype,
       }));
 
     try {
