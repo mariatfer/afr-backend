@@ -15,26 +15,6 @@ export default {
       privacyPolicy,
       newsletter,
     } = ctx.request.body;
-
-    if (!name || !email || !message || !subject) {
-      return ctx.badRequest(
-        "Faltan campos obligatorios: nombre, email, asunto o mensaje"
-      );
-    }
-
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return ctx.badRequest("El correo electrónico no tiene un formato válido");
-    }
-
-
-    if (!privacyPolicy) {
-      return ctx.badRequest(
-        "Debes aceptar la política de privacidad para continuar"
-      );
-    }
-
     const rawFiles = ctx.request.files?.["files[]"];
     const files = Array.isArray(rawFiles)
       ? rawFiles
@@ -120,14 +100,11 @@ export default {
       .filter((file) => file.filepath)
       .map((file) => ({
         filename: file.originalFilename,
-        content: fs.readFileSync(file.filepath, { encoding: "base64" }),
-        encoding: "base64",
-        contentType: file.mimetype,
+        content: fs.readFileSync(file.filepath).toString("base64"),
+        content_type: file.mimetype,
       }));
 
     try {
-      console.log("Enviando correos...");
-
       await strapi.plugins["email"].services.email.send({
         from: "onboarding@resend.dev",
         to: "mt.fgucciardi@gmail.com",
@@ -135,14 +112,14 @@ export default {
         html: adminHtml,
         attachments,
       });
-      console.log("Correo admin enviado");
+
       await strapi.plugins["email"].services.email.send({
         from: "onboarding@resend.dev",
         to: email,
         subject: "Confirmación de solicitud de presupuesto - AFR Diseño",
         html: userConfirmationHtml,
       });
-      console.log("Correo usuario enviado");
+
       await strapi.service("api::quote.quote").create({
         data: {
           name,
@@ -169,8 +146,8 @@ export default {
     } catch (error) {
       strapi.log.error("Error en sendQuote:", error);
       console.error("Error en sendQuote:", error);
-      ctx.status = 500;
-      ctx.body = { error: error.message || "Error desconocido" };
+      ctx.throw(500, "Error al procesar la solicitud");
+      ctx.body = { error: "Datos inválidos para el envío de correo" };
     }
   },
 };
