@@ -122,7 +122,7 @@ export default {
         .plugin("email")
         .service("email")
         .send({
-          from: "onboarding@resend.dev",
+          from: "mt.fgucciardi@gmail.com",
           to: "mt.fgucciardi@gmail.com",
           replyTo: email,
           subject: `Nuevo presupuesto desde AFR Diseño - ${subject}`,
@@ -134,7 +134,7 @@ export default {
 
       await strapi.plugin("email").service("email").send({
         to: email,
-        from: "onboarding@resend.dev",
+        from: "mt.fgucciardi@gmail.com",
         subject: "Confirmación de solicitud de presupuesto - AFR Diseño",
         html: userConfirmationHtml,
       });
