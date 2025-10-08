@@ -1,0 +1,54 @@
+{
+  "collectionName": "components_seo_seos",
+  "info": {
+    "displayName": "SEO",
+    "icon": "key"
+  },
+  "options": {},
+  "attributes": {
+    "metaTitle": {
+      "type": "string",
+      "maxLength": 70,
+      "required": true
+    },
+    "metaDescription": {
+      "type": "text",
+      "maxLength": 160,
+      "required": true
+    },
+    "author": {
+      "type": "string",
+      "default": "AFR Diseño & Impresión",
+      "maxLength": 200,
+      "required": true
+    },
+    "noIndex": {
+      "type": "boolean",
+      "default": false
+    },
+    "noFollow": {
+      "type": "boolean",
+      "default": false
+    },
+    "ogTitle": {
+      "type": "string",
+      "maxLength": 70
+    },
+    "ogDescription": {
+      "type": "text",
+      "maxLength": 160
+    },
+    "ogImage": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    }
+  },
+  "config": {}
+}

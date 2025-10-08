@@ -1,0 +1,26 @@
+{
+  "collectionName": "components_cards_small_cards",
+  "info": {
+    "displayName": "SmallCard",
+    "icon": "file"
+  },
+  "options": {},
+  "attributes": {
+    "cardImage": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "config": {}
+}
