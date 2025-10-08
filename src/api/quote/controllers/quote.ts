@@ -100,23 +100,45 @@ export default {
       .filter((file) => file.filepath)
       .map((file) => ({
         filename: file.originalFilename,
-        content: fs.readFileSync(file.filepath).toString("base64"),
+        content: fs.readFileSync(file.filepath, { encoding: "base64" }),
+        encoding: "base64",
+        contentType: file.mimetype,
       }));
 
-    try {
-      await strapi.plugins["email"].services.email.send({
-        to: "mt.fgucciardi@gmail.com",
-        replyTo: email,
-        subject: `Nuevo presupuesto desde AFR Diseño - ${subject}`,
-        html: adminHtml,
-        ...(attachments.length > 0 && { attachments }),
-      });
+    console.log(">>> Iniciando sendQuote");
 
-      await strapi.plugins["email"].services.email.send({
+    console.log("Body:", ctx.request.body);
+    console.log(
+      "Archivos:",
+      files.map((f) => f.originalFilename)
+    );
+
+    console.log("Generando contenido HTML para admin y usuario...");
+
+    try {
+      console.log(">>> Enviando email al admin...");
+
+      await strapi
+        .plugin("email")
+        .service("email")
+        .send({
+          from: "onboarding@resend.dev",
+          to: "mt.fgucciardi@gmail.com",
+          replyTo: email,
+          subject: `Nuevo presupuesto desde AFR Diseño - ${subject}`,
+          html: adminHtml,
+          ...(attachments.length > 0 && { attachments }),
+        });
+
+      console.log(">>> Enviando email al usuario...");
+
+      await strapi.plugin("email").service("email").send({
         to: email,
+        from: "onboarding@resend.dev",
         subject: "Confirmación de solicitud de presupuesto - AFR Diseño",
         html: userConfirmationHtml,
       });
+      console.log(">>> Guardando quote en la base de datos...");
 
       await strapi.service("api::quote.quote").create({
         data: {
@@ -142,9 +164,17 @@ export default {
         message: "Emails enviados y quote guardado correctamente",
       });
     } catch (error) {
+      console.error(">>> Error completo:", error);
+
       strapi.log.error("Error en sendQuote:", error);
-      console.error("Error completo:", error);
-      ctx.throw(500, "Error al procesar la solicitud");
+
+      ctx.status = 500;
+      ctx.body = {
+        message: "Error al procesar la solicitud",
+        error: error.message,
+        stack: error.stack,
+        details: error,
+      };
     }
   },
 };
