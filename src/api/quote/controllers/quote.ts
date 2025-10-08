@@ -84,7 +84,7 @@ export default {
         </div>
 
         <div style="border: 1px solid #035074;background: #EFFAFF; color: #035074; padding: 20px; border-radius: 8px; text-align: center;">
-        <p style="margin: 0 0 10px 0; font-weight: bold;">AFR Diseño</p>
+          <p style="margin: 0 0 10px 0; font-weight: bold;">AFR Diseño</p>
           <p style="margin: 0; font-size: 14px; opacity: 0.9;">
             Te responderemos desde esta dirección: <strong>mt.fgucciardi@gmail.com</strong>
           </p>
@@ -101,20 +101,18 @@ export default {
       .map((file) => ({
         filename: file.originalFilename,
         content: fs.readFileSync(file.filepath).toString("base64"),
-        content_type: file.mimetype,
       }));
 
     try {
       await strapi.plugins["email"].services.email.send({
-        from: "onboarding@resend.dev",
         to: "mt.fgucciardi@gmail.com",
-        subject: "Nuevo presupuesto desde AFR Diseño",
+        replyTo: email,
+        subject: `Nuevo presupuesto desde AFR Diseño - ${subject}`,
         html: adminHtml,
-        attachments,
+        ...(attachments.length > 0 && { attachments }),
       });
 
       await strapi.plugins["email"].services.email.send({
-        from: "onboarding@resend.dev",
         to: email,
         subject: "Confirmación de solicitud de presupuesto - AFR Diseño",
         html: userConfirmationHtml,
@@ -145,9 +143,8 @@ export default {
       });
     } catch (error) {
       strapi.log.error("Error en sendQuote:", error);
-      console.error("Error en sendQuote:", error);
+      console.error("Error completo:", error);
       ctx.throw(500, "Error al procesar la solicitud");
-      ctx.body = { error: "Datos inválidos para el envío de correo" };
     }
   },
 };
