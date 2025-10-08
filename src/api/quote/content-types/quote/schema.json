@@ -1,0 +1,71 @@
+{
+  "kind": "collectionType",
+  "collectionName": "quotes",
+  "info": {
+    "singularName": "quote",
+    "pluralName": "quotes",
+    "displayName": "Quote"
+  },
+  "options": {
+    "draftAndPublish": false,
+    "comment": ""
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "minLength": 2,
+      "maxLength": 100
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "subject": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "message": {
+      "type": "text",
+      "required": true,
+      "minLength": 10
+    },
+    "productName": {
+      "type": "string",
+      "required": false,
+      "maxLength": 150
+    },
+    "sentToEmail": {
+      "type": "boolean",
+      "default": false
+    },
+    "emailSentAt": {
+      "type": "datetime"
+    },
+    "files": {
+      "type": "json",
+      "required": false
+    },
+    "acceptsPrivacyPolicy": {
+      "type": "boolean",
+      "default": false
+    },
+    "privacyPolicyConsentDate": {
+      "type": "datetime"
+    },
+    "acceptsMarketing": {
+      "type": "boolean",
+      "default": false
+    },
+    "marketingConsentDate": {
+      "type": "datetime"
+    },
+    "ipAddress": {
+      "type": "string"
+    },
+    "userAgent": {
+      "type": "string"
+    }
+  }
+}

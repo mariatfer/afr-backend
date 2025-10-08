@@ -11,18 +11,28 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "description": {
-      "type": "string"
+    "homeCarousel": {
+      "type": "component",
+      "component": "carousel.carousel",
+      "repeatable": true,
+      "required": true
     },
-    "image": {
-      "type": "media",
-      "multiple": false,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
+    "hero": {
+      "type": "component",
+      "component": "hero.hero",
+      "repeatable": false
+    },
+    "smallCard": {
+      "type": "component",
+      "component": "cards.small-card",
+      "repeatable": true,
+      "required": true,
+      "max": 3
+    },
+    "seo": {
+      "type": "component",
+      "component": "seo.seo",
+      "repeatable": false
     }
   }
 }

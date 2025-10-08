@@ -11,11 +11,53 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "string",
+      "required": true
+    },
     "title": {
       "type": "string"
     },
-    "slug": {
-      "type": "string"
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::category.category",
+      "inversedBy": "products"
+    },
+    "productImage": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "description": {
+      "type": "richtext"
+    },
+    "productCarousel": {
+      "type": "component",
+      "component": "carousel.carousel",
+      "repeatable": true,
+      "required": true
+    },
+    "seo": {
+      "type": "component",
+      "component": "seo.seo",
+      "repeatable": false,
+      "required": true
+    },
+    "accordion": {
+      "type": "component",
+      "component": "accordion.accordion",
+      "repeatable": true
     }
   }
 }
