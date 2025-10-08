@@ -112,8 +112,10 @@ export default {
         message: "Emails enviados correctamente",
       });
     } catch (error) {
+      strapi.log.error("Error en sendContact:", error);
       console.error("Error enviando emails:", error);
       ctx.throw(500, "Error al enviar los emails");
+      ctx.body = { error: 'Datos inválidos para el envío de correo' }
     }
   },
 };

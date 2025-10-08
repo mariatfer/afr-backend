@@ -144,8 +144,10 @@ export default {
         message: "Emails enviados y quote guardado correctamente",
       });
     } catch (error) {
+      strapi.log.error("Error en sendQuote:", error);
       console.error("Error en sendQuote:", error);
       ctx.throw(500, "Error al procesar la solicitud");
+      ctx.body = { error: "Datos inválidos para el envío de correo" };
     }
   },
 };
