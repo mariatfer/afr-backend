@@ -15,6 +15,26 @@ export default {
       privacyPolicy,
       newsletter,
     } = ctx.request.body;
+
+    if (!name || !email || !message || !subject) {
+      return ctx.badRequest(
+        "Faltan campos obligatorios: nombre, email, asunto o mensaje"
+      );
+    }
+
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return ctx.badRequest("El correo electrónico no tiene un formato válido");
+    }
+
+
+    if (!privacyPolicy) {
+      return ctx.badRequest(
+        "Debes aceptar la política de privacidad para continuar"
+      );
+    }
+
     const rawFiles = ctx.request.files?.["files[]"];
     const files = Array.isArray(rawFiles)
       ? rawFiles
