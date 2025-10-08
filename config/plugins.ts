@@ -5,7 +5,10 @@ export default ({
 }) => ({
   email: {
     config: {
-      provider: env("NODE_ENV") === "production" ? "strapi-cloud" : "resend",
+      provider:
+        env("NODE_ENV") === "production"
+          ? "strapi-cloud"
+          : "strapi-provider-email-resend",
       providerOptions:
         env("NODE_ENV") === "production"
           ? {}
