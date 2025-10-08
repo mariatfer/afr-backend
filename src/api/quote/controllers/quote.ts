@@ -106,6 +106,8 @@ export default {
       }));
 
     try {
+      console.log("Enviando correos...");
+
       await strapi.plugins["email"].services.email.send({
         from: "onboarding@resend.dev",
         to: "mt.fgucciardi@gmail.com",
@@ -113,14 +115,14 @@ export default {
         html: adminHtml,
         attachments,
       });
-
+      console.log("Correo admin enviado");
       await strapi.plugins["email"].services.email.send({
         from: "onboarding@resend.dev",
         to: email,
         subject: "Confirmación de solicitud de presupuesto - AFR Diseño",
         html: userConfirmationHtml,
       });
-
+      console.log("Correo usuario enviado");
       await strapi.service("api::quote.quote").create({
         data: {
           name,
@@ -147,8 +149,8 @@ export default {
     } catch (error) {
       strapi.log.error("Error en sendQuote:", error);
       console.error("Error en sendQuote:", error);
-      ctx.throw(500, "Error al procesar la solicitud");
-      ctx.body = { error: "Datos inválidos para el envío de correo" };
+      ctx.status = 500;
+      ctx.body = { error: error.message || "Error desconocido" };
     }
   },
 };
