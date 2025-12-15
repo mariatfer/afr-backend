@@ -99,20 +99,23 @@ export default {
         .plugin("email")
         .service("email")
         .send({
-          from: defaultFrom,
-          to: defaultReplyTo,
-          replyTo: email || defaultReplyTo,
+          from: `AFR Diseño & Impresión <${defaultFrom}>`,
+          to: [defaultReplyTo],
+          replyTo: email,
           subject: "Nuevo mensaje de contacto desde AFR Diseño",
           html: adminHtml,
-          ...(attachments.length > 0 && { attachments }),
+          ...(attachments.length > 0 && { attachments: attachments }),
         });
 
-      await strapi.plugin("email").service("email").send({
-        from: defaultFrom,
-        to: email,
-        subject: "Confirmación de mensaje recibido - AFR Diseño",
-        html: userConfirmationHtml,
-      });
+      await strapi
+        .plugin("email")
+        .service("email")
+        .send({
+          from: `AFR Diseño & Impresión <${defaultFrom}>`,
+          to: [email],
+          subject: "Confirmación de mensaje recibido - AFR Diseño",
+          html: userConfirmationHtml,
+        });
 
       ctx.send({
         ok: true,

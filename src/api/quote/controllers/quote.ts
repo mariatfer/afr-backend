@@ -113,16 +113,16 @@ export default {
         .plugin("email")
         .service("email")
         .send({
-          from: defaultFrom,
-          to: defaultReplyTo,
-          replyTo: email || defaultReplyTo,
+          from: `AFR Diseño & Impresión <${defaultFrom}>`,
+          to: [defaultReplyTo],
+          replyTo: email,
           subject: `Nuevo presupuesto desde AFR Diseño - ${subject}`,
           html: adminHtml,
-          ...(attachments.length > 0 && { attachments }),
+          ...(attachments.length > 0 && { attachments: attachments }),
         });
 
       await strapi.plugin("email").service("email").send({
-        from: defaultFrom,
+        from: `AFR Diseño & Impresión <${defaultFrom}>`,
         to: email,
         subject: "Confirmación de solicitud de presupuesto - AFR Diseño",
         html: userConfirmationHtml,
