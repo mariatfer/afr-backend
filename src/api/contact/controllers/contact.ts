@@ -1,10 +1,19 @@
+/**
+ * contact controller
+ */
+
 import fs from "fs";
+import { Resend } from "resend";
+import type { Context } from "koa";
+import type { UploadedFile } from "../../../interfaces/email"; 
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default {
-  async sendContact(ctx) {
+  async sendContact(ctx: Context) {
     const { name, email, message, subject } = ctx.request.body;
     const rawFiles = ctx.request.files?.["files[]"];
-    const files = Array.isArray(rawFiles)
+    const files: UploadedFile[] = Array.isArray(rawFiles)
       ? rawFiles
       : rawFiles
         ? [rawFiles]
@@ -87,44 +96,64 @@ export default {
       .filter((file) => file.filepath)
       .map((file) => ({
         filename: file.originalFilename,
-        content: fs.readFileSync(file.filepath).toString("base64"),
-        content_type: file.mimetype,
+        content: fs.readFileSync(file.filepath, { encoding: "base64" }),
+        encoding: "base64",
+        contentType: file.mimetype,
+        filepath: file.filepath,
       }));
 
     try {
-      const defaultFrom = process.env.RESEND_DEFAULT_FROM;
-      const defaultReplyTo = process.env.RESEND_DEFAULT_REPLY_TO;
+      const FROM = `AFR Diseño & Impresión <${process.env.RESEND_DEFAULT_FROM}>`;
+      const ADMIN_EMAIL = process.env.RESEND_DEFAULT_REPLY_TO;
 
-      await strapi
-        .plugin("email")
-        .service("email")
-        .send({
-          from: `AFR Diseño & Impresión <${defaultFrom}>`,
-          to: [defaultReplyTo],
-          replyTo: email,
-          subject: "Nuevo mensaje de contacto desde AFR Diseño",
-          html: adminHtml,
-          ...(attachments.length > 0 && { attachments: attachments }),
-        });
+      const adminResponse = await resend.emails.send({
+        from: FROM,
+        to: [ADMIN_EMAIL],
+        replyTo: email,
+        subject: "Nuevo mensaje de contacto desde AFR Diseño",
+        html: adminHtml,
+        ...(attachments.length > 0 && { attachments }),
+      });
 
-      await strapi
-        .plugin("email")
-        .service("email")
-        .send({
-          from: `AFR Diseño & Impresión <${defaultFrom}>`,
-          to: [email],
-          subject: "Confirmación de mensaje recibido - AFR Diseño",
-          html: userConfirmationHtml,
-        });
+      if (adminResponse.error) {
+        throw new Error(adminResponse.error.message);
+      }
+      const userResponse = await resend.emails.send({
+        from: FROM,
+        to: [email],
+        subject: "Confirmación de mensaje recibido - AFR Diseño",
+        html: userConfirmationHtml,
+      });
 
-      ctx.send({
+      if (userResponse.error) {
+        throw new Error(userResponse.error.message);
+      }
+
+      ctx.body = {
         ok: true,
         message: "Emails enviados correctamente",
-      });
+      };
     } catch (error) {
-      strapi.log.error("Error en sendContact:", error);
-      console.error("Error enviando emails:", error);
-      ctx.throw(500, "Error al enviar los emails");
+      strapi.log.error("[CONTACT] Error en sendContact:", error);
+
+      ctx.status = 500;
+      ctx.body = {
+        message: "Error al enviar los emails",
+        error: error.message,
+      };
+    } finally {
+      for (const file of attachments) {
+        if (file.filepath && fs.existsSync(file.filepath)) {
+          try {
+            fs.unlinkSync(file.filepath);
+          } catch (err) {
+            strapi.log.warn(
+              `[CONTACT] No se pudo borrar archivo temporal: ${file.filepath}`,
+              err
+            );
+          }
+        }
+      }
     }
   },
 };

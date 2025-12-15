@@ -3,9 +3,14 @@
  */
 
 import fs from "fs";
+import { Resend } from "resend";
+import type { Context } from "koa";
+import type { UploadedFile } from "../../../interfaces/email";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default {
-  async sendQuote(ctx) {
+  async sendQuote(ctx: Context) {
     const {
       name,
       email,
@@ -16,7 +21,7 @@ export default {
       newsletter,
     } = ctx.request.body;
     const rawFiles = ctx.request.files?.["files[]"];
-    const files = Array.isArray(rawFiles)
+    const files: UploadedFile[] = Array.isArray(rawFiles)
       ? rawFiles
       : rawFiles
         ? [rawFiles]
@@ -103,30 +108,36 @@ export default {
         content: fs.readFileSync(file.filepath, { encoding: "base64" }),
         encoding: "base64",
         contentType: file.mimetype,
+        filepath: file.filepath,
       }));
 
     try {
-      const defaultFrom = process.env.RESEND_DEFAULT_FROM;
-      const defaultReplyTo = process.env.RESEND_DEFAULT_REPLY_TO;
+      const FROM = `AFR Diseño & Impresión <${process.env.RESEND_DEFAULT_FROM}>`;
+      const ADMIN_EMAIL = process.env.RESEND_DEFAULT_REPLY_TO;
 
-      await strapi
-        .plugin("email")
-        .service("email")
-        .send({
-          from: `AFR Diseño & Impresión <${defaultFrom}>`,
-          to: [defaultReplyTo],
-          replyTo: email,
-          subject: `Nuevo presupuesto desde AFR Diseño - ${subject}`,
-          html: adminHtml,
-          ...(attachments.length > 0 && { attachments: attachments }),
-        });
+      const adminResponse = await resend.emails.send({
+        from: FROM,
+        to: [ADMIN_EMAIL],
+        replyTo: email,
+        subject: `Nuevo presupuesto desde AFR Diseño - ${subject}`,
+        html: adminHtml,
+        ...(attachments.length > 0 && { attachments }),
+      });
 
-      await strapi.plugin("email").service("email").send({
-        from: `AFR Diseño & Impresión <${defaultFrom}>`,
-        to: email,
+      if (adminResponse.error) {
+        throw new Error(adminResponse.error.message);
+      }
+
+      const userResponse = await resend.emails.send({
+        from: FROM,
+        to: [email],
         subject: "Confirmación de solicitud de presupuesto - AFR Diseño",
         html: userConfirmationHtml,
       });
+
+      if (userResponse.error) {
+        throw new Error(userResponse.error.message);
+      }
 
       await strapi.service("api::quote.quote").create({
         data: {
@@ -147,20 +158,31 @@ export default {
         },
       });
 
-      ctx.send({
+      ctx.body = {
         ok: true,
-        message: "Emails enviados y quote guardado correctamente",
-      });
+        message: "Emails enviados y presupuesto guardado correctamente",
+      };
     } catch (error) {
-      strapi.log.error("Error sendQuote:", error);
+      strapi.log.error("[QUOTE] Error en sendQuote:", error);
 
       ctx.status = 500;
       ctx.body = {
         message: "Error al procesar la solicitud",
         error: error.message,
-        stack: error.stack,
-        details: error,
       };
+    } finally {
+      for (const file of attachments) {
+        if (file.filepath && fs.existsSync(file.filepath)) {
+          try {
+            fs.unlinkSync(file.filepath);
+          } catch (err) {
+            strapi.log.warn(
+              `[QUOTE] No se pudo borrar archivo temporal: ${file.filepath}`,
+              err
+            );
+          }
+        }
+      }
     }
   },
 };
