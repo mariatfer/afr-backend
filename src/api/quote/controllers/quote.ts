@@ -105,40 +105,28 @@ export default {
         contentType: file.mimetype,
       }));
 
-    console.log(">>> Iniciando sendQuote");
-
-    console.log("Body:", ctx.request.body);
-    console.log(
-      "Archivos:",
-      files.map((f) => f.originalFilename)
-    );
-
-    console.log("Generando contenido HTML para admin y usuario...");
-
     try {
-      console.log(">>> Enviando email al admin...");
+      const defaultFrom = process.env.RESEND_DEFAULT_FROM;
+      const defaultReplyTo = process.env.RESEND_DEFAULT_REPLY_TO;
 
       await strapi
         .plugin("email")
         .service("email")
         .send({
-          from: "mt.fgucciardi@gmail.com",
-          to: "mt.fgucciardi@gmail.com",
-          replyTo: email,
+          from: defaultFrom,
+          to: defaultReplyTo,
+          replyTo: email || defaultReplyTo,
           subject: `Nuevo presupuesto desde AFR Diseño - ${subject}`,
           html: adminHtml,
           ...(attachments.length > 0 && { attachments }),
         });
 
-      console.log(">>> Enviando email al usuario...");
-
       await strapi.plugin("email").service("email").send({
+        from: defaultFrom,
         to: email,
-        from: "mt.fgucciardi@gmail.com",
         subject: "Confirmación de solicitud de presupuesto - AFR Diseño",
         html: userConfirmationHtml,
       });
-      console.log(">>> Guardando quote en la base de datos...");
 
       await strapi.service("api::quote.quote").create({
         data: {
@@ -164,9 +152,7 @@ export default {
         message: "Emails enviados y quote guardado correctamente",
       });
     } catch (error) {
-      console.error(">>> Error completo:", error);
-
-      strapi.log.error("Error en sendQuote:", error);
+      strapi.log.error("Error sendQuote:", error);
 
       ctx.status = 500;
       ctx.body = {

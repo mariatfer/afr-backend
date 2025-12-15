@@ -92,16 +92,23 @@ export default {
       }));
 
     try {
-      await strapi.plugins["email"].services.email.send({
-        from: "onboarding@resend.dev",
-        to: "mt.fgucciardi@gmail.com",
-        subject: "Nuevo mensaje de contacto desde AFR Diseño",
-        html: adminHtml,
-        attachments,
-      });
+      const defaultFrom = process.env.RESEND_DEFAULT_FROM;
+      const defaultReplyTo = process.env.RESEND_DEFAULT_REPLY_TO;
 
-      await strapi.plugins["email"].services.email.send({
-        from: "onboarding@resend.dev",
+      await strapi
+        .plugin("email")
+        .service("email")
+        .send({
+          from: defaultFrom,
+          to: defaultReplyTo,
+          replyTo: email || defaultReplyTo,
+          subject: "Nuevo mensaje de contacto desde AFR Diseño",
+          html: adminHtml,
+          ...(attachments.length > 0 && { attachments }),
+        });
+
+      await strapi.plugin("email").service("email").send({
+        from: defaultFrom,
         to: email,
         subject: "Confirmación de mensaje recibido - AFR Diseño",
         html: userConfirmationHtml,
@@ -115,7 +122,6 @@ export default {
       strapi.log.error("Error en sendContact:", error);
       console.error("Error enviando emails:", error);
       ctx.throw(500, "Error al enviar los emails");
-      ctx.body = { error: 'Datos inválidos para el envío de correo' }
     }
   },
 };
